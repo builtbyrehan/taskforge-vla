@@ -1,0 +1,541 @@
+<mujoco model="taskforge_dual_arm">
+
+    <compiler angle="radian"/>
+
+    <option
+        timestep="0.002"
+        gravity="0 0 -9.81"
+        integrator="implicitfast"
+    />
+
+    <default>
+        <joint damping="2"/>
+        <geom friction="1 0.1 0.01"/>
+    </default>
+
+
+    <!-- ================================================= -->
+    <!-- WORLD                                             -->
+    <!-- ================================================= -->
+
+    <worldbody>
+
+        <!-- LIGHT -->
+
+        <light
+            name="main_light"
+            pos="0 0 3"
+            dir="0 0 -1"
+        />
+
+
+        <!-- ================================================= -->
+        <!-- FLOOR                                             -->
+        <!-- ================================================= -->
+
+        <geom
+            name="floor"
+            type="plane"
+            size="2 2 0.1"
+            rgba="0.85 0.85 0.85 1"
+        />
+
+
+        <!-- ================================================= -->
+        <!-- TABLE                                             -->
+        <!-- ================================================= -->
+
+        <body
+            name="table"
+            pos="0 0 0.35"
+        >
+
+            <geom
+                name="table_geom"
+                type="box"
+                size="0.75 0.55 0.05"
+                rgba="0.55 0.35 0.20 1"
+            />
+
+        </body>
+
+
+
+        <!-- ================================================= -->
+        <!-- LEFT ROBOT ARM                                    -->
+        <!-- ================================================= -->
+
+        <body
+            name="left_base"
+            pos="-0.35 0 0.45"
+        >
+
+            <!-- BASE -->
+
+            <geom
+                name="left_base_geom"
+                type="cylinder"
+                size="0.08 0.08"
+                rgba="0.15 0.25 0.75 1"
+            />
+
+
+            <!-- ============================================= -->
+            <!-- LEFT UPPER ARM                                -->
+            <!-- ============================================= -->
+
+            <body
+                name="left_upper_arm"
+                pos="0 0 0.08"
+            >
+
+                <joint
+                    name="left_shoulder"
+                    type="hinge"
+                    axis="0 1 0"
+                    range="-1.3 1.3"
+                />
+
+                <geom
+                    name="left_upper_arm_geom"
+                    type="capsule"
+                    fromto="0 0 0 0 0 0.30"
+                    size="0.035"
+                    mass="1"
+                    rgba="0.20 0.40 0.90 1"
+                />
+
+
+                <!-- ========================================= -->
+                <!-- LEFT FOREARM                              -->
+                <!-- ========================================= -->
+
+                <body
+                    name="left_forearm"
+                    pos="0 0 0.30"
+                >
+
+                    <joint
+                        name="left_elbow"
+                        type="hinge"
+                        axis="0 1 0"
+                        range="-1.5 1.5"
+                    />
+
+                    <geom
+                        name="left_forearm_geom"
+                        type="capsule"
+                        fromto="0 0 0 0 0 0.25"
+                        size="0.03"
+                        mass="0.7"
+                        rgba="0.20 0.65 0.95 1"
+                    />
+
+
+                    <!-- ===================================== -->
+                    <!-- LEFT HAND / GRIPPER                   -->
+                    <!-- ===================================== -->
+
+                    <body
+                        name="left_hand"
+                        pos="0 0 0.25"
+                    >
+
+                        <!-- PALM -->
+
+                        <geom
+                            name="left_palm_geom"
+                            type="box"
+                            size="0.045 0.035 0.025"
+                            mass="0.15"
+                            rgba="0.1 0.9 0.3 1"
+                        />
+
+
+                        <!-- END EFFECTOR REFERENCE -->
+
+                        <site
+                            name="left_ee"
+                            pos="0 0 0"
+                            type="sphere"
+                            size="0.015"
+                            rgba="1 1 0 1"
+                        />
+
+
+                        <!-- ================================= -->
+                        <!-- LEFT FINGER A                     -->
+                        <!-- ================================= -->
+
+                        <body
+                            name="left_finger_a"
+                            pos="0 0.075 -0.055"
+                        >
+
+                            <joint
+                                name="left_finger_a_joint"
+                                type="slide"
+                                axis="0 1 0"
+                                range="-0.02 0"
+                                damping="2"
+                            />
+
+                            <geom
+                                name="left_finger_a_geom"
+                                type="box"
+                                size="0.022 0.012 0.055"
+                                mass="0.05"
+                                friction="1.5 0.1 0.01"
+                                rgba="0.15 0.75 0.25 1"
+                            />
+
+                        </body>
+
+
+                        <!-- ================================= -->
+                        <!-- LEFT FINGER B                     -->
+                        <!-- ================================= -->
+
+                        <body
+                            name="left_finger_b"
+                            pos="0 -0.075 -0.055"
+                        >
+
+                            <joint
+                                name="left_finger_b_joint"
+                                type="slide"
+                                axis="0 1 0"
+                                range="0 0.02"
+                                damping="2"
+                            />
+
+                            <geom
+                                name="left_finger_b_geom"
+                                type="box"
+                                size="0.022 0.012 0.055"
+                                mass="0.05"
+                                friction="1.5 0.1 0.01"
+                                rgba="0.15 0.75 0.25 1"
+                            />
+
+                        </body>
+
+                    </body>
+
+                </body>
+
+            </body>
+
+        </body>
+
+
+
+        <!-- ================================================= -->
+        <!-- RIGHT ROBOT ARM                                   -->
+        <!-- ================================================= -->
+
+        <body
+            name="right_base"
+            pos="0.35 0 0.45"
+        >
+
+            <!-- BASE -->
+
+            <geom
+                name="right_base_geom"
+                type="cylinder"
+                size="0.08 0.08"
+                rgba="0.75 0.25 0.15 1"
+            />
+
+
+            <!-- ============================================= -->
+            <!-- RIGHT UPPER ARM                               -->
+            <!-- ============================================= -->
+
+            <body
+                name="right_upper_arm"
+                pos="0 0 0.08"
+            >
+
+                <joint
+                    name="right_shoulder"
+                    type="hinge"
+                    axis="0 1 0"
+                    range="-1.3 1.3"
+                />
+
+                <geom
+                    name="right_upper_arm_geom"
+                    type="capsule"
+                    fromto="0 0 0 0 0 0.30"
+                    size="0.035"
+                    mass="1"
+                    rgba="0.90 0.40 0.20 1"
+                />
+
+
+                <!-- ========================================= -->
+                <!-- RIGHT FOREARM                             -->
+                <!-- ========================================= -->
+
+                <body
+                    name="right_forearm"
+                    pos="0 0 0.30"
+                >
+
+                    <joint
+                        name="right_elbow"
+                        type="hinge"
+                        axis="0 1 0"
+                        range="-1.5 1.5"
+                    />
+
+                    <geom
+                        name="right_forearm_geom"
+                        type="capsule"
+                        fromto="0 0 0 0 0 0.25"
+                        size="0.03"
+                        mass="0.7"
+                        rgba="0.95 0.65 0.20 1"
+                    />
+
+
+                    <!-- ===================================== -->
+                    <!-- RIGHT HAND / GRIPPER                  -->
+                    <!-- ===================================== -->
+
+                    <body
+                        name="right_hand"
+                        pos="0 0 0.25"
+                    >
+
+                        <!-- PALM -->
+
+                        <geom
+                            name="right_palm_geom"
+                            type="box"
+                            size="0.045 0.035 0.025"
+                            mass="0.15"
+                            rgba="0.9 0.3 0.15 1"
+                        />
+
+
+                        <!-- END EFFECTOR REFERENCE -->
+
+                        <site
+                            name="right_ee"
+                            pos="0 0 0"
+                            type="sphere"
+                            size="0.015"
+                            rgba="1 1 0 1"
+                        />
+
+
+                        <!-- ================================= -->
+                        <!-- RIGHT FINGER A                    -->
+                        <!-- ================================= -->
+
+                        <body
+                            name="right_finger_a"
+                            pos="0 0.075 -0.055"
+                        >
+
+                            <joint
+                                name="right_finger_a_joint"
+                                type="slide"
+                                axis="0 1 0"
+                                range="-0.02 0"
+                                damping="2"
+                            />
+
+                            <geom
+                                name="right_finger_a_geom"
+                                type="box"
+                                size="0.022 0.012 0.055"
+                                mass="0.05"
+                                friction="1.5 0.1 0.01"
+                                rgba="0.9 0.4 0.15 1"
+                            />
+
+                        </body>
+
+
+                        <!-- ================================= -->
+                        <!-- RIGHT FINGER B                    -->
+                        <!-- ================================= -->
+
+                        <body
+                            name="right_finger_b"
+                            pos="0 -0.075 -0.055"
+                        >
+
+                            <joint
+                                name="right_finger_b_joint"
+                                type="slide"
+                                axis="0 1 0"
+                                range="0 0.02"
+                                damping="2"
+                            />
+
+                            <geom
+                                name="right_finger_b_geom"
+                                type="box"
+                                size="0.022 0.012 0.055"
+                                mass="0.05"
+                                friction="1.5 0.1 0.01"
+                                rgba="0.9 0.4 0.15 1"
+                            />
+
+                        </body>
+
+                    </body>
+
+                </body>
+
+            </body>
+
+        </body>
+
+
+
+        <!-- ================================================= -->
+        <!-- RED BLOCK                                         -->
+        <!-- ================================================= -->
+
+        <body
+            name="red_block"
+            pos="0.15 0 0.47"
+        >
+
+            <freejoint/>
+
+            <geom
+                name="red_block_geom"
+                type="box"
+                size="0.05 0.05 0.05"
+                mass="0.2"
+                friction="1.2 0.1 0.01"
+                rgba="0.9 0.1 0.1 1"
+            />
+
+        </body>
+
+
+
+        <!-- ================================================= -->
+        <!-- BLUE BLOCK                                        -->
+        <!-- ================================================= -->
+
+        <body
+            name="blue_block"
+            pos="-0.15 0 0.47"
+        >
+
+            <freejoint/>
+
+            <geom
+                name="blue_block_geom"
+                type="box"
+                size="0.05 0.05 0.05"
+                mass="0.2"
+                friction="1.2 0.1 0.01"
+                rgba="0.1 0.2 0.9 1"
+            />
+
+        </body>
+
+    </worldbody>
+
+
+
+    <!-- ================================================= -->
+    <!-- ACTUATORS                                         -->
+    <!-- ================================================= -->
+
+    <actuator>
+
+
+        <!-- ================================================= -->
+        <!-- LEFT ARM ACTUATORS                                -->
+        <!-- ================================================= -->
+
+        <position
+            name="left_shoulder_motor"
+            joint="left_shoulder"
+            kp="200"
+            kv="25"
+            ctrlrange="-1.3 1.3"
+        />
+
+        <position
+            name="left_elbow_motor"
+            joint="left_elbow"
+            kp="180"
+            kv="20"
+            ctrlrange="-1.5 1.5"
+        />
+
+
+        <!-- LEFT GRIPPER -->
+
+        <position
+            name="left_finger_a_motor"
+            joint="left_finger_a_joint"
+            kp="250"
+            kv="10"
+            ctrlrange="-0.02 0"
+        />
+
+        <position
+            name="left_finger_b_motor"
+            joint="left_finger_b_joint"
+            kp="250"
+            kv="10"
+            ctrlrange="0 0.02"
+        />
+
+
+
+        <!-- ================================================= -->
+        <!-- RIGHT ARM ACTUATORS                               -->
+        <!-- ================================================= -->
+
+        <position
+            name="right_shoulder_motor"
+            joint="right_shoulder"
+            kp="200"
+            kv="25"
+            ctrlrange="-1.3 1.3"
+        />
+
+        <position
+            name="right_elbow_motor"
+            joint="right_elbow"
+            kp="180"
+            kv="20"
+            ctrlrange="-1.5 1.5"
+        />
+
+
+        <!-- RIGHT GRIPPER -->
+
+        <position
+            name="right_finger_a_motor"
+            joint="right_finger_a_joint"
+            kp="250"
+            kv="10"
+            ctrlrange="-0.02 0"
+        />
+
+        <position
+            name="right_finger_b_motor"
+            joint="right_finger_b_joint"
+            kp="250"
+            kv="10"
+            ctrlrange="0 0.02"
+        />
+
+    </actuator>
+
+</mujoco>
