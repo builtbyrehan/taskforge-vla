@@ -1,15 +1,17 @@
 <div align="center">
 
-<!-- Add your final banner here -->
-<img src="docs/assets/taskforge-banner.png" alt="TaskForge VLA Banner" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:7C3AED,50:6D28D9,100:06B6D4&height=200&section=header&animation=fadeIn" width="100%" alt="TaskForge VLA banner"/>
 
+<sub>Animated banner via <a href="https://github.com/kyechan99/capsule-render">capsule-render</a> — drop in <code>docs/assets/taskforge-banner.png</code> to swap in final brand art later.</sub>
+
+<br/>
 <br/>
 
 # 🤖 TaskForge VLA
 
 ### Adaptive Language-Guided Bimanual Manipulation
 
-**Tell two robots what you want done. TaskForge figures out how.**
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&pause=1200&color=7C3AED&center=true&vCenter=true&width=820&height=50&lines=Tell+two+robots+what+you+want+done.;TaskForge+figures+out+how.;AI+proposes.+Structured+systems+validate.;Deterministic+robotics+executes." alt="Typing SVG"/>
 
 <br/>
 
@@ -23,6 +25,14 @@
 
 [![GitHub Stars](https://img.shields.io/github/stars/builtbyrehan/taskforge-vla?style=social)](https://github.com/builtbyrehan/taskforge-vla/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/builtbyrehan/taskforge-vla?style=social)](https://github.com/builtbyrehan/taskforge-vla/network/members)
+
+<br/>
+<br/>
+
+<a href="https://lablab.ai/ai-hackathons/ai-infra-summit-hackathon"><img src="https://img.shields.io/badge/Built%20for-AI%20Infra%20Summit%20Hackathon%202026-7C3AED?style=for-the-badge" alt="AI Infra Summit Hackathon 2026"/></a>
+<a href="https://www.ai-infra-summit.com/ai-infra-hackathon"><img src="https://img.shields.io/badge/Target%20Track-Intel%20%7C%20Physical%20AI-0071C5?style=for-the-badge&logo=intel&logoColor=white" alt="Intel Physical AI track"/></a>
+
+<sub>Santa Clara Convention Center · Sept 15–17, 2026 · co-organized by <a href="https://www.kisacoresearch.com">Kisaco Research</a> & <a href="https://lablab.ai">lablab.ai</a> — full sponsor roster in the Hackathon section below</sub>
 
 </div>
 
@@ -208,6 +218,20 @@ flowchart TD
     RECOVERY --> PLANNER
 
     VERIFY --> RESULT["🎯 Verified Task Result"]
+
+    classDef human fill:#7C3AED,stroke:#5B21B6,color:#fff,stroke-width:2px
+    classDef ai fill:#8B5CF6,stroke:#6D28D9,color:#fff,stroke-width:2px
+    classDef guard fill:#EF4444,stroke:#B91C1C,color:#fff,stroke-width:2px
+    classDef robot fill:#06B6D4,stroke:#0E7490,color:#fff,stroke-width:2px
+    classDef world fill:#10B981,stroke:#047857,color:#fff,stroke-width:2px
+    classDef result fill:#F59E0B,stroke:#B45309,color:#fff,stroke-width:2px
+
+    class USER human
+    class PARSER,GOAL,PLANNER ai
+    class VALIDATOR,STOP guard
+    class COORD,EXECUTOR,LEFT,RIGHT robot
+    class SIM,WORLD,MONITOR,RECOVERY world
+    class VERIFY,RESULT result
 ```
 
 > Some components shown above are part of the planned complete architecture.  
@@ -413,26 +437,30 @@ Move spoon to [0.213, -0.091, 0.052]
 
 | Layer | Technology |
 |---|---|
-| 🧠 Core Logic | Python |
-| 🤖 Robotics Simulation | MuJoCo |
+| 🧠 Core Logic | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) |
+| 🤖 Robotics Simulation | ![MuJoCo](https://img.shields.io/badge/MuJoCo-Physics%20Engine-orange?style=flat-square) |
 | 📐 Robot Control | Inverse Kinematics + Position Control |
-| 📦 Typed Schemas | Pydantic |
+| 📦 Typed Schemas | ![Pydantic](https://img.shields.io/badge/Pydantic-E92063?style=flat-square&logo=pydantic&logoColor=white) |
 | 🌍 World Representation | Structured Python/Pydantic Models |
 | 🛡️ Validation | Deterministic Plan Validator |
 | 📋 Planning | Symbolic Planner |
 | 🗣️ Language | Rule-Based Parser → LLM Integration Planned |
-| 🌐 API | FastAPI *(planned)* |
-| ⚡ Realtime Events | WebSockets *(planned)* |
-| 💻 Dashboard | React + Vite *(planned)* |
-| 💾 Run Storage | SQLite / JSONL *(planned)* |
+| 🌐 API | ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white) *(planned)* |
+| ⚡ Realtime Events | ![WebSockets](https://img.shields.io/badge/WebSockets-black?style=flat-square) *(planned)* |
+| 💻 Dashboard | ![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black) ![Vite](https://img.shields.io/badge/Vite-9135FF?style=flat-square&logo=vite&logoColor=white) *(planned)* |
+| 💾 Run Storage | ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white) / JSONL *(planned)* |
 
 </div>
+
+<sub>Logos and hex colors above are checked against the live [Simple Icons](https://simpleicons.org/) registry — MuJoCo and WebSockets don't have entries there yet, so those stay as plain badges rather than guessed icons.</sub>
 
 ---
 
 # 📸 Demo
 
 <div align="center">
+
+![Status](https://img.shields.io/badge/status-awaiting%20capture-F59E0B?style=flat-square)
 
 ### 🎬 End-to-End Demo
 
@@ -464,7 +492,7 @@ Move spoon to [0.213, -0.091, 0.052]
 </tr>
 </table>
 
-> These paths are placeholders. Add screenshots/GIFs to `docs/assets/` as the demo is polished.
+> 🚧 **Not yet captured.** These three paths don't have real files behind them, so they'll show as broken images until you add them. Record the actual `main.py` run (OBS or `asciinema` → GIF works well), grab two PNGs of the MuJoCo viewer mid-pick, and save them into `docs/assets/` with the exact filenames above — the rest of this README is already wired to pick them up automatically.
 
 ---
 
@@ -831,6 +859,16 @@ flowchart LR
     H --> I["Generate Recovery Plan"]
     I --> J["Validate"]
     J --> A
+
+    classDef action fill:#06B6D4,stroke:#0E7490,color:#fff,stroke-width:2px
+    classDef decision fill:#7C3AED,stroke:#5B21B6,color:#fff,stroke-width:2px
+    classDef good fill:#10B981,stroke:#047857,color:#fff,stroke-width:2px
+    classDef bad fill:#EF4444,stroke:#B91C1C,color:#fff,stroke-width:2px
+
+    class A,B,H,I,J action
+    class C,F decision
+    class D good
+    class E,G bad
 ```
 
 ---
@@ -926,13 +964,38 @@ This makes the intelligence visible instead of hiding it behind a single model r
 
 # 🏆 Hackathon
 
-TaskForge VLA is being developed for the:
+<div align="center">
 
-**AI Infra Summit Hackathon**
+![Hackathon](https://img.shields.io/badge/AI%20Infra%20Summit%20Hackathon-Sept%2015--17%2C%202026-7C3AED?style=for-the-badge)
+![Venue](https://img.shields.io/badge/Venue-Santa%20Clara%20Convention%20Center-06B6D4?style=for-the-badge)
+
+</div>
+
+TaskForge VLA is being developed for the **[AI Infra Summit Hackathon](https://lablab.ai/ai-hackathons/ai-infra-summit-hackathon)** — a two-day build sprint (200 on-site developers, 2,000+ remote builders) held alongside the AI Infra Summit, co-organized by **[Kisaco Research](https://www.kisacoresearch.com)** and **[lablab.ai](https://lablab.ai)**. The online build window runs September 10–16, 2026; on-site judging happens September 15–17 at the Santa Clara Convention Center, alongside 8,000+ summit attendees.
 
 Target track:
 
-**Intel Bimanual VLA Manipulation with Multi-Modal Reasoning**
+**Intel — Bimanual VLA Manipulation with Multi-Modal Reasoning**
+
+Intel is the hackathon's Ruby-tier sponsor and is [running its challenge tracks](https://newsroom.intel.com/artificial-intelligence/intel-at-ai-infra-summit-2026) around its Physical AI stack for real-world robotics — the reason TaskForge's dual-arm, validate-before-you-move approach fits the brief. *(TaskForge VLA is an independent, community-built entry for this track — not an official Intel product.)*
+
+### Event Sponsors
+
+<div align="center">
+
+**Ruby**
+
+<a href="https://www.intel.com"><img src="https://img.shields.io/badge/Intel-0071C5?style=for-the-badge&logo=intel&logoColor=white" alt="Intel"/></a>
+<a href="https://www.qualcomm.com"><img src="https://img.shields.io/badge/Qualcomm-3253DC?style=for-the-badge&logo=qualcomm&logoColor=white" alt="Qualcomm"/></a>
+<a href="https://sima.ai"><img src="https://img.shields.io/badge/SiMa.ai-1A1A2E?style=for-the-badge" alt="SiMa.ai"/></a>
+
+**Sapphire**
+
+<a href="https://www.speechmatics.com"><img src="https://img.shields.io/badge/Speechmatics-1A1A2E?style=for-the-badge" alt="Speechmatics"/></a>
+
+</div>
+
+<sub>These are sponsors of the AI Infra Summit Hackathon as a whole, shown here for accurate attribution — not sponsors or partners of this repository specifically. Intel and Qualcomm are rendered with their verified <a href="https://simpleicons.org/">Simple Icons</a> mark and brand color; SiMa.ai and Speechmatics don't have a Simple Icons entry yet, so they're shown as plain badges rather than a guessed logo.</sub>
 
 The MVP is simulation-first so development can focus on:
 
