@@ -2,6 +2,7 @@ import re
 
 from taskforge.schemas.goal import (
     GoalCommand,
+    GoalPredicate,
     ParsedGoal,
 )
 
@@ -32,7 +33,7 @@ class InstructionParser:
 
 
     # =====================================================
-    # HELPERS
+    # NORMALIZATION
     # =====================================================
 
     def _normalize(
@@ -46,6 +47,13 @@ class InstructionParser:
             .lower()
         )
 
+        # Remove punctuation that is not useful
+        instruction = re.sub(
+            r"[.!?,]",
+            "",
+            instruction,
+        )
+
         instruction = re.sub(
             r"\s+",
             " ",
@@ -54,6 +62,10 @@ class InstructionParser:
 
         return instruction
 
+
+    # =====================================================
+    # OBJECT HELPERS
+    # =====================================================
 
     def _find_object(
         self,
@@ -65,10 +77,71 @@ class InstructionParser:
         ):
 
             if phrase in text:
+
                 return object_id
 
         return None
 
+
+    def _find_objects_in_order(
+        self,
+        text: str,
+    ):
+
+        matches = []
+
+        used_object_ids = set()
+
+
+        for phrase, object_id in (
+            self.object_aliases.items()
+        ):
+
+            for match in re.finditer(
+                re.escape(phrase),
+                text,
+            ):
+
+                matches.append(
+                    (
+                        match.start(),
+                        object_id,
+                    )
+                )
+
+
+        matches.sort(
+            key=lambda item: item[0]
+        )
+
+
+        objects = []
+
+
+        for _, object_id in matches:
+
+            if (
+                object_id
+                in used_object_ids
+            ):
+
+                continue
+
+            objects.append(
+                object_id
+            )
+
+            used_object_ids.add(
+                object_id
+            )
+
+
+        return objects
+
+
+    # =====================================================
+    # ACTOR
+    # =====================================================
 
     def _find_actor(
         self,
@@ -80,13 +153,95 @@ class InstructionParser:
         ):
 
             if phrase in text:
+
                 return actor_id
 
         return None
 
 
     # =====================================================
-    # PARSER
+    # RELATIONAL PARSER
+    # =====================================================
+
+    def _parse_relational(
+        self,
+        normalized: str,
+        original_instruction: str,
+    ):
+
+        relation = None
+
+
+        if "right of" in normalized:
+
+            relation = "right_of"
+
+        elif "left of" in normalized:
+
+            relation = "left_of"
+
+        elif (
+            "near" in normalized
+            or "close to" in normalized
+        ):
+
+            relation = "near"
+
+
+        if relation is None:
+
+            return None
+
+
+        objects = (
+            self._find_objects_in_order(
+                normalized
+            )
+        )
+
+
+        if len(objects) < 2:
+
+            raise InstructionParseError(
+                "A relational instruction "
+                "requires two objects."
+            )
+
+
+        subject = objects[0]
+
+        reference = objects[1]
+
+
+        if subject == reference:
+
+            raise InstructionParseError(
+                "Subject and reference "
+                "cannot be the same object."
+            )
+
+
+        return ParsedGoal(
+
+            original_instruction=(
+                original_instruction
+            ),
+
+            goal_type="relational",
+
+            desired_predicates=[
+
+                GoalPredicate(
+                    predicate=relation,
+                    subject=subject,
+                    reference=reference,
+                )
+            ],
+        )
+
+
+    # =====================================================
+    # MAIN PARSER
     # =====================================================
 
     def parse(
@@ -107,7 +262,23 @@ class InstructionParser:
 
 
         # =================================================
-        # SPECIAL CASE:
+        # TRY RELATIONAL GOAL FIRST
+        # =================================================
+
+        relational_goal = (
+            self._parse_relational(
+                normalized,
+                instruction,
+            )
+        )
+
+
+        if relational_goal is not None:
+
+            return relational_goal
+
+
+        # =================================================
         # PICK BOTH BLOCKS
         # =================================================
 
@@ -118,7 +289,9 @@ class InstructionParser:
 
             return ParsedGoal(
 
-                original_instruction=instruction,
+                original_instruction=(
+                    instruction
+                ),
 
                 goal_type="multi_pick",
 
@@ -140,7 +313,7 @@ class InstructionParser:
 
 
         # =================================================
-        # SPLIT MULTI-COMMAND INSTRUCTION
+        # NORMAL PICK COMMANDS
         # =================================================
 
         parts = re.split(
@@ -156,46 +329,38 @@ class InstructionParser:
 
             part = part.strip()
 
+
             if not part:
+
                 continue
 
-
-            # ---------------------------------------------
-            # ACTION
-            # ---------------------------------------------
 
             if "pick" not in part:
 
                 raise InstructionParseError(
                     f"Unsupported command: "
-                    f"'{part}'. "
-                    f"Only PICK is currently supported."
+                    f"'{part}'."
                 )
 
-
-            # ---------------------------------------------
-            # OBJECT
-            # ---------------------------------------------
 
             target = self._find_object(
                 part
             )
 
+
             if target is None:
 
                 raise InstructionParseError(
-                    f"Could not identify an "
-                    f"object in: '{part}'"
+                    f"Could not identify "
+                    f"an object in: "
+                    f"'{part}'"
                 )
 
-
-            # ---------------------------------------------
-            # ACTOR
-            # ---------------------------------------------
 
             actor = self._find_actor(
                 part
             )
+
 
             if actor is None:
 
@@ -229,7 +394,9 @@ class InstructionParser:
 
         return ParsedGoal(
 
-            original_instruction=instruction,
+            original_instruction=(
+                instruction
+            ),
 
             goal_type=goal_type,
 

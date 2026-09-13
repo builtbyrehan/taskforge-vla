@@ -5,7 +5,14 @@ import mujoco
 
 class MujocoBackend:
 
-    def __init__(self, model_path):
+    # =====================================================
+    # INITIALIZATION
+    # =====================================================
+
+    def __init__(
+        self,
+        model_path,
+    ):
 
         self.model = (
             mujoco.MjModel.from_xml_path(
@@ -17,16 +24,20 @@ class MujocoBackend:
             self.model
         )
 
-        # Tracks assisted grasps:
+        # -------------------------------------------------
+        # Assisted grasp bookkeeping
         #
         # {
-        #   "red_block": {
-        #       "site_id": ...,
-        #       "qpos_address": ...,
-        #       "dof_address": ...,
-        #       "offset": ...
-        #   }
+        #     "red_block": {
+        #         "site_id": ...,
+        #         "site_name": ...,
+        #         "qpos_address": ...,
+        #         "dof_address": ...,
+        #         "offset": ...
+        #     }
         # }
+        # -------------------------------------------------
+
         self.attachments = {}
 
         mujoco.mj_forward(
@@ -39,7 +50,10 @@ class MujocoBackend:
     # LOOKUPS
     # =====================================================
 
-    def actuator_id(self, name):
+    def actuator_id(
+        self,
+        name,
+    ):
 
         idx = mujoco.mj_name2id(
             self.model,
@@ -48,14 +62,19 @@ class MujocoBackend:
         )
 
         if idx == -1:
+
             raise RuntimeError(
-                f"Actuator not found: {name}"
+                f"Actuator not found: "
+                f"{name}"
             )
 
         return idx
 
 
-    def joint_id(self, name):
+    def joint_id(
+        self,
+        name,
+    ):
 
         idx = mujoco.mj_name2id(
             self.model,
@@ -64,14 +83,19 @@ class MujocoBackend:
         )
 
         if idx == -1:
+
             raise RuntimeError(
-                f"Joint not found: {name}"
+                f"Joint not found: "
+                f"{name}"
             )
 
         return idx
 
 
-    def body_id(self, name):
+    def body_id(
+        self,
+        name,
+    ):
 
         idx = mujoco.mj_name2id(
             self.model,
@@ -80,14 +104,19 @@ class MujocoBackend:
         )
 
         if idx == -1:
+
             raise RuntimeError(
-                f"Body not found: {name}"
+                f"Body not found: "
+                f"{name}"
             )
 
         return idx
 
 
-    def site_id(self, name):
+    def site_id(
+        self,
+        name,
+    ):
 
         idx = mujoco.mj_name2id(
             self.model,
@@ -96,18 +125,23 @@ class MujocoBackend:
         )
 
         if idx == -1:
+
             raise RuntimeError(
-                f"Site not found: {name}"
+                f"Site not found: "
+                f"{name}"
             )
 
         return idx
 
 
     # =====================================================
-    # STATE
+    # STATE ACCESS
     # =====================================================
 
-    def body_position(self, name):
+    def body_position(
+        self,
+        name,
+    ):
 
         body_id = self.body_id(
             name
@@ -120,7 +154,10 @@ class MujocoBackend:
         )
 
 
-    def body_orientation(self, name):
+    def body_orientation(
+        self,
+        name,
+    ):
 
         body_id = self.body_id(
             name
@@ -133,11 +170,33 @@ class MujocoBackend:
         )
 
 
-    def site_position(self, name):
+    def site_position(
+        self,
+        name_or_id,
+    ):
 
-        site_id = self.site_id(
-            name
-        )
+        # Allows either:
+        #
+        # site_position("left_ee")
+        #
+        # or:
+        #
+        # site_position(site_id)
+
+        if isinstance(
+            name_or_id,
+            str,
+        ):
+
+            site_id = self.site_id(
+                name_or_id
+            )
+
+        else:
+
+            site_id = int(
+                name_or_id
+            )
 
         return (
             self.data.site_xpos[
@@ -146,7 +205,10 @@ class MujocoBackend:
         )
 
 
-    def joint_position(self, name):
+    def joint_position(
+        self,
+        name,
+    ):
 
         joint_id = self.joint_id(
             name
@@ -192,13 +254,16 @@ class MujocoBackend:
         )
 
         if attachment is None:
+
             return None
+
 
         attached_site_id = (
             attachment[
                 "site_id"
             ]
         )
+
 
         left_site_id = (
             self.site_id(
@@ -212,23 +277,55 @@ class MujocoBackend:
             )
         )
 
+
         if (
             attached_site_id
             == left_site_id
         ):
+
             return "left_arm"
+
 
         if (
             attached_site_id
             == right_site_id
         ):
+
             return "right_arm"
+
 
         return "unknown"
 
 
     # =====================================================
-    # ASSISTED GRASP BACKEND
+    # ATTACHMENT OFFSET
+    # =====================================================
+
+    def attachment_offset(
+        self,
+        object_name,
+    ):
+
+        attachment = (
+            self.attachments.get(
+                object_name
+            )
+        )
+
+        if attachment is None:
+
+            return None
+
+
+        return (
+            attachment[
+                "offset"
+            ].copy()
+        )
+
+
+    # =====================================================
+    # ASSISTED GRASP
     # =====================================================
 
     def attach_object(
@@ -236,6 +333,10 @@ class MujocoBackend:
         object_name,
         site_name,
     ):
+
+        # -------------------------------------------------
+        # Find object body and EE site
+        # -------------------------------------------------
 
         body_id = self.body_id(
             object_name
@@ -245,19 +346,63 @@ class MujocoBackend:
             site_name
         )
 
+
+        # -------------------------------------------------
+        # Find object's joint
+        # -------------------------------------------------
+
         joint_id = (
             self.model.body_jntadr[
                 body_id
             ]
         )
 
-        if joint_id < 0:
+
+        joint_count = (
+            self.model.body_jntnum[
+                body_id
+            ]
+        )
+
+
+        if (
+            joint_id < 0
+            or joint_count == 0
+        ):
 
             raise RuntimeError(
                 f"Object '{object_name}' "
-                f"does not have a movable joint."
+                f"does not have a "
+                f"movable joint."
             )
 
+
+        # -------------------------------------------------
+        # Object should use a MuJoCo free joint
+        # -------------------------------------------------
+
+        joint_type = (
+            self.model.jnt_type[
+                joint_id
+            ]
+        )
+
+
+        if (
+            joint_type
+            != mujoco.mjtJoint.mjJNT_FREE
+        ):
+
+            raise RuntimeError(
+                f"Object '{object_name}' "
+                f"must use a free joint "
+                f"for assisted grasp."
+            )
+
+
+        # -------------------------------------------------
+        # Joint addresses
+        # -------------------------------------------------
 
         qpos_address = (
             self.model.jnt_qposadr[
@@ -272,6 +417,10 @@ class MujocoBackend:
         )
 
 
+        # -------------------------------------------------
+        # Current object and EE locations
+        # -------------------------------------------------
+
         object_position = (
             self.body_position(
                 object_name
@@ -285,8 +434,12 @@ class MujocoBackend:
         )
 
 
-        # Preserve object position relative
-        # to the end effector when attached.
+        # -------------------------------------------------
+        # Preserve current relative offset
+        #
+        # object_position =
+        # EE_position + offset
+        # -------------------------------------------------
 
         offset = (
             object_position
@@ -315,26 +468,65 @@ class MujocoBackend:
         }
 
 
+        # Immediately synchronize object.
+        self._update_attachments()
+
+
+        return True
+
+
+    # =====================================================
+    # DETACH OBJECT
+    # =====================================================
+
     def detach_object(
         self,
         object_name,
     ):
 
-        self.attachments.pop(
-            object_name,
-            None,
+        if (
+            object_name
+            not in self.attachments
+        ):
+
+            return False
+
+
+        del self.attachments[
+            object_name
+        ]
+
+
+        # Recompute MuJoCo transforms after release.
+        mujoco.mj_forward(
+            self.model,
+            self.data,
         )
 
 
-    def _update_attachments(self):
+        return True
+
+
+    # =====================================================
+    # UPDATE ASSISTED GRASPS
+    # =====================================================
+
+    def _update_attachments(
+        self,
+    ):
 
         if not self.attachments:
+
             return
 
 
         for attachment in (
             self.attachments.values()
         ):
+
+            # ---------------------------------------------
+            # Read end-effector position
+            # ---------------------------------------------
 
             site_position = (
                 self.data.site_xpos[
@@ -344,6 +536,10 @@ class MujocoBackend:
                 ].copy()
             )
 
+
+            # ---------------------------------------------
+            # Desired object position
+            # ---------------------------------------------
 
             desired_position = (
                 site_position
@@ -366,13 +562,13 @@ class MujocoBackend:
             )
 
 
-            # Free joint layout:
+            # ---------------------------------------------
+            # Free joint qpos:
             #
-            # qpos:
-            # [x, y, z, qw, qx, qy, qz]
+            # x y z qw qx qy qz
             #
-            # qvel:
-            # [vx, vy, vz, wx, wy, wz]
+            # Update translation only.
+            # ---------------------------------------------
 
             self.data.qpos[
                 qpos_address:
@@ -380,8 +576,13 @@ class MujocoBackend:
             ] = desired_position
 
 
-            # Freeze object translational and
-            # rotational velocity while attached.
+            # ---------------------------------------------
+            # Free joint qvel:
+            #
+            # vx vy vz wx wy wz
+            #
+            # Zero velocity while assisted-grasped.
+            # ---------------------------------------------
 
             self.data.qvel[
                 dof_address:
@@ -389,9 +590,8 @@ class MujocoBackend:
             ] = 0.0
 
 
-        # Recalculate MuJoCo world transforms
-        # after manually changing qpos.
-
+        # Recalculate world transforms after
+        # manually modifying qpos.
         mujoco.mj_forward(
             self.model,
             self.data,
@@ -399,7 +599,7 @@ class MujocoBackend:
 
 
     # =====================================================
-    # PHYSICS
+    # SINGLE PHYSICS STEP
     # =====================================================
 
     def step(
@@ -411,7 +611,9 @@ class MujocoBackend:
         start = time.time()
 
 
-        # Advance physics
+        # -------------------------------------------------
+        # Advance MuJoCo physics
+        # -------------------------------------------------
 
         mujoco.mj_step(
             self.model,
@@ -419,29 +621,40 @@ class MujocoBackend:
         )
 
 
-        # Apply assisted grasp constraints
+        # -------------------------------------------------
+        # Update assisted grasp objects
+        # -------------------------------------------------
 
         self._update_attachments()
 
 
+        # -------------------------------------------------
         # Update viewer
+        # -------------------------------------------------
 
         if viewer is not None:
 
-            viewer.sync()
+            if viewer.is_running():
+
+                viewer.sync()
 
 
-        # Keep simulation near real time
+        # -------------------------------------------------
+        # Approximate real-time playback
+        # -------------------------------------------------
 
         if realtime:
 
+            elapsed = (
+                time.time()
+                - start
+            )
+
             remaining = (
                 self.model.opt.timestep
-                - (
-                    time.time()
-                    - start
-                )
+                - elapsed
             )
+
 
             if remaining > 0:
 
@@ -450,6 +663,10 @@ class MujocoBackend:
                 )
 
 
+    # =====================================================
+    # RUN SIMULATION FOR N SIMULATED SECONDS
+    # =====================================================
+
     def run_for(
         self,
         seconds,
@@ -457,19 +674,32 @@ class MujocoBackend:
         realtime=True,
     ):
 
-        start = time.time()
+        timestep = (
+            self.model.opt.timestep
+        )
 
-        while (
-            time.time()
-            - start
-            < seconds
+
+        number_of_steps = max(
+            1,
+            int(
+                seconds
+                / timestep
+            ),
+        )
+
+
+        for _ in range(
+            number_of_steps
         ):
 
+            # Viewer may have been closed.
             if (
                 viewer is not None
                 and not viewer.is_running()
             ):
+
                 break
+
 
             self.step(
                 viewer=viewer,

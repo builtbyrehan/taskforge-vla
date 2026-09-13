@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 ActorType = Literal[
@@ -8,8 +8,10 @@ ActorType = Literal[
     "right_arm",
 ]
 
+
 ActionType = Literal[
     "pick",
+    "place",
     "move_home",
 ]
 
@@ -24,7 +26,17 @@ class PlanStep(BaseModel):
 
     target: str | None = None
 
-    depends_on: list[str] = []
+    # World-space XYZ position.
+    # Only required for PLACE.
+    position: tuple[
+        float,
+        float,
+        float,
+    ] | None = None
+
+    depends_on: list[str] = Field(
+        default_factory=list
+    )
 
 
 class TaskPlan(BaseModel):
@@ -40,9 +52,9 @@ class StepResult(BaseModel):
 
     step_id: str
 
-    actor: str
+    actor: ActorType
 
-    action: str
+    action: ActionType
 
     target: str | None = None
 
@@ -59,6 +71,6 @@ class PlanExecutionResult(BaseModel):
 
     completed_steps: list[str]
 
-    failed_step: str | None = None
+    failed_step: str | None
 
     results: list[StepResult]

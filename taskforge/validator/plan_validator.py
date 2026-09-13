@@ -1,8 +1,17 @@
 from dataclasses import dataclass
 
-from taskforge.schemas.plan import TaskPlan
-from taskforge.schemas.world import WorldState
+from taskforge.schemas.plan import (
+    TaskPlan,
+)
 
+from taskforge.schemas.world import (
+    WorldState,
+)
+
+
+# =========================================================
+# VALIDATION RESULT TYPES
+# =========================================================
 
 @dataclass
 class ValidationIssue:
@@ -21,6 +30,10 @@ class ValidationResult:
 
     issues: list[ValidationIssue]
 
+
+# =========================================================
+# PLAN VALIDATOR
+# =========================================================
 
 class PlanValidator:
 
@@ -75,7 +88,7 @@ class PlanValidator:
 
 
         # =================================================
-        # UNIQUE STEP IDS
+        # STEP IDS
         # =================================================
 
         step_ids = [
@@ -83,13 +96,20 @@ class PlanValidator:
             for step in plan.steps
         ]
 
+
+        # =================================================
+        # UNIQUE STEP IDS
+        # =================================================
+
         if len(step_ids) != len(
             set(step_ids)
         ):
 
             issues.append(
                 ValidationIssue(
-                    code="DUPLICATE_STEP_ID",
+                    code=(
+                        "DUPLICATE_STEP_ID"
+                    ),
                     message=(
                         "Plan contains duplicate "
                         "step identifiers."
@@ -104,19 +124,70 @@ class PlanValidator:
 
 
         # =================================================
+        # STEP ORDER LOOKUP
+        # =================================================
+
+        step_order = {
+            step.id: index
+            for index, step
+            in enumerate(plan.steps)
+        }
+
+
+        # =================================================
+        # PROJECTED SYMBOLIC WORLD STATE
+        # =================================================
+        #
+        # This is very important.
+        #
+        # We cannot validate PLACE only from the initial
+        # world state because PICK may happen before PLACE.
+        #
+        # Example:
+        #
+        # Initial:
+        # red_block -> nobody holding it
+        #
+        # a1 PICK red_block
+        # Projected:
+        # red_block -> left_arm
+        #
+        # a2 PLACE red_block
+        # Projected:
+        # red_block -> None
+        #
+        # =================================================
+
+        projected_grasped_by = {
+
+            object_id:
+                obj.grasped_by
+
+            for object_id, obj
+            in world.objects.items()
+        }
+
+
+        # =================================================
         # STEP VALIDATION
         # =================================================
 
         for step in plan.steps:
 
-            # ---------------------------------------------
-            # ACTOR
-            # ---------------------------------------------
+
+            # =================================================
+            # ACTOR VALIDATION
+            # =================================================
+
+            actor_valid = True
+
 
             if (
                 step.actor
                 not in self.available_actors
             ):
+
+                actor_valid = False
 
                 issues.append(
                     ValidationIssue(
@@ -130,13 +201,18 @@ class PlanValidator:
                 )
 
 
-            # ---------------------------------------------
-            # DEPENDENCIES EXIST
-            # ---------------------------------------------
+            # =================================================
+            # DEPENDENCY VALIDATION
+            # =================================================
 
             for dependency in (
                 step.depends_on
             ):
+
+
+                # ---------------------------------------------
+                # Dependency exists
+                # ---------------------------------------------
 
                 if (
                     dependency
@@ -157,12 +233,20 @@ class PlanValidator:
                         )
                     )
 
+                    continue
+
+
+                # ---------------------------------------------
+                # Cannot depend on itself
+                # ---------------------------------------------
 
                 if dependency == step.id:
 
                     issues.append(
                         ValidationIssue(
-                            code="SELF_DEPENDENCY",
+                            code=(
+                                "SELF_DEPENDENCY"
+                            ),
                             message=(
                                 "Step cannot depend "
                                 "on itself."
@@ -171,12 +255,54 @@ class PlanValidator:
                         )
                     )
 
+                    continue
 
-            # ---------------------------------------------
-            # PICK RULES
-            # ---------------------------------------------
+
+                # ---------------------------------------------
+                # Dependency must occur before this step
+                # ---------------------------------------------
+                #
+                # Our current executor runs sequentially.
+                # Therefore a step cannot depend on a future
+                # step even if the graph is technically
+                # acyclic.
+                # ---------------------------------------------
+
+                if (
+                    step_order[
+                        dependency
+                    ]
+                    >
+                    step_order[
+                        step.id
+                    ]
+                ):
+
+                    issues.append(
+                        ValidationIssue(
+                            code=(
+                                "DEPENDENCY_ORDER_ERROR"
+                            ),
+                            message=(
+                                f"Step '{step.id}' "
+                                f"depends on future "
+                                f"step '{dependency}'."
+                            ),
+                            step_id=step.id,
+                        )
+                    )
+
+
+            # =================================================
+            # PICK
+            # =================================================
 
             if step.action == "pick":
+
+
+                # ---------------------------------------------
+                # PICK must have target
+                # ---------------------------------------------
 
                 if step.target is None:
 
@@ -195,6 +321,31 @@ class PlanValidator:
 
                     continue
 
+
+                # ---------------------------------------------
+                # PICK should not contain position
+                # ---------------------------------------------
+
+                if step.position is not None:
+
+                    issues.append(
+                        ValidationIssue(
+                            code=(
+                                "UNEXPECTED_POSITION"
+                            ),
+                            message=(
+                                "Pick action must "
+                                "not contain a "
+                                "placement position."
+                            ),
+                            step_id=step.id,
+                        )
+                    )
+
+
+                # ---------------------------------------------
+                # Object must exist
+                # ---------------------------------------------
 
                 if (
                     step.target
@@ -224,6 +375,10 @@ class PlanValidator:
                 ]
 
 
+                # ---------------------------------------------
+                # Object must be graspable
+                # ---------------------------------------------
+
                 if not obj.graspable:
 
                     issues.append(
@@ -240,11 +395,21 @@ class PlanValidator:
                         )
                     )
 
+                    continue
 
-                if (
-                    obj.grasped_by
-                    is not None
-                ):
+
+                # ---------------------------------------------
+                # Use PROJECTED state, not just initial state
+                # ---------------------------------------------
+
+                current_holder = (
+                    projected_grasped_by[
+                        step.target
+                    ]
+                )
+
+
+                if current_holder is not None:
 
                     issues.append(
                         ValidationIssue(
@@ -254,22 +419,169 @@ class PlanValidator:
                             message=(
                                 f"Object "
                                 f"'{step.target}' "
-                                f"is already held by "
-                                f"{obj.grasped_by}."
+                                f"is already projected "
+                                f"to be held by "
+                                f"{current_holder}."
                             ),
                             step_id=step.id,
                         )
                     )
 
+                    continue
 
-            # ---------------------------------------------
-            # MOVE HOME RULES
-            # ---------------------------------------------
+
+                # ---------------------------------------------
+                # PROJECT PICK EFFECT
+                # ---------------------------------------------
+
+                if actor_valid:
+
+                    projected_grasped_by[
+                        step.target
+                    ] = step.actor
+
+
+            # =================================================
+            # PLACE
+            # =================================================
+
+            elif step.action == "place":
+
+
+                # ---------------------------------------------
+                # PLACE requires target
+                # ---------------------------------------------
+
+                if step.target is None:
+
+                    issues.append(
+                        ValidationIssue(
+                            code=(
+                                "MISSING_TARGET"
+                            ),
+                            message=(
+                                "Place action "
+                                "requires target."
+                            ),
+                            step_id=step.id,
+                        )
+                    )
+
+                    continue
+
+
+                # ---------------------------------------------
+                # PLACE requires XYZ position
+                # ---------------------------------------------
+
+                if step.position is None:
+
+                    issues.append(
+                        ValidationIssue(
+                            code=(
+                                "MISSING_POSITION"
+                            ),
+                            message=(
+                                "Place action "
+                                "requires a target "
+                                "position."
+                            ),
+                            step_id=step.id,
+                        )
+                    )
+
+                    continue
+
+
+                # ---------------------------------------------
+                # Object must exist
+                # ---------------------------------------------
+
+                if (
+                    step.target
+                    not in world.objects
+                ):
+
+                    issues.append(
+                        ValidationIssue(
+                            code=(
+                                "UNKNOWN_OBJECT"
+                            ),
+                            message=(
+                                f"Object "
+                                f"'{step.target}' "
+                                f"does not exist "
+                                f"in world state."
+                            ),
+                            step_id=step.id,
+                        )
+                    )
+
+                    continue
+
+
+                # ---------------------------------------------
+                # Check projected ownership
+                # ---------------------------------------------
+
+                current_holder = (
+                    projected_grasped_by[
+                        step.target
+                    ]
+                )
+
+
+                if (
+                    current_holder
+                    != step.actor
+                ):
+
+                    issues.append(
+                        ValidationIssue(
+                            code=(
+                                "OBJECT_NOT_HELD_BY_ACTOR"
+                            ),
+                            message=(
+                                f"{step.actor} cannot "
+                                f"place "
+                                f"'{step.target}' "
+                                f"because it is "
+                                f"projected to be "
+                                f"held by "
+                                f"{current_holder}."
+                            ),
+                            step_id=step.id,
+                        )
+                    )
+
+                    continue
+
+
+                # ---------------------------------------------
+                # PROJECT PLACE EFFECT
+                # ---------------------------------------------
+                #
+                # After PLACE, the object is released.
+                # ---------------------------------------------
+
+                projected_grasped_by[
+                    step.target
+                ] = None
+
+
+            # =================================================
+            # MOVE HOME
+            # =================================================
 
             elif (
                 step.action
                 == "move_home"
             ):
+
+
+                # ---------------------------------------------
+                # MOVE_HOME must not have object target
+                # ---------------------------------------------
 
                 if (
                     step.target
@@ -284,6 +596,30 @@ class PlanValidator:
                             message=(
                                 "move_home must "
                                 "not have target."
+                            ),
+                            step_id=step.id,
+                        )
+                    )
+
+
+                # ---------------------------------------------
+                # MOVE_HOME must not have XYZ position
+                # ---------------------------------------------
+
+                if (
+                    step.position
+                    is not None
+                ):
+
+                    issues.append(
+                        ValidationIssue(
+                            code=(
+                                "UNEXPECTED_POSITION"
+                            ),
+                            message=(
+                                "move_home must "
+                                "not contain a "
+                                "position."
                             ),
                             step_id=step.id,
                         )
@@ -311,6 +647,10 @@ class PlanValidator:
             )
 
 
+        # =================================================
+        # FINAL RESULT
+        # =================================================
+
         return ValidationResult(
             valid=(
                 len(issues) == 0
@@ -329,8 +669,11 @@ class PlanValidator:
     ) -> bool:
 
         graph = {
+
             step.id:
-                list(step.depends_on)
+                list(
+                    step.depends_on
+                )
 
             for step
             in plan.steps
@@ -342,12 +685,25 @@ class PlanValidator:
         visited = set()
 
 
-        def visit(node):
+        def visit(
+            node,
+        ):
+
+            # ---------------------------------------------
+            # Currently traversing this node -> cycle
+            # ---------------------------------------------
 
             if node in visiting:
+
                 return True
 
+
+            # ---------------------------------------------
+            # Already completely checked
+            # ---------------------------------------------
+
             if node in visited:
+
                 return False
 
 
@@ -356,6 +712,10 @@ class PlanValidator:
             )
 
 
+            # ---------------------------------------------
+            # Traverse dependencies
+            # ---------------------------------------------
+
             for dependency in (
                 graph.get(
                     node,
@@ -363,14 +723,27 @@ class PlanValidator:
                 )
             ):
 
-                if dependency not in graph:
+
+                # Unknown dependencies are handled by the
+                # main validator.
+                if (
+                    dependency
+                    not in graph
+                ):
+
                     continue
+
 
                 if visit(
                     dependency
                 ):
+
                     return True
 
+
+            # ---------------------------------------------
+            # Finish node
+            # ---------------------------------------------
 
             visiting.remove(
                 node
@@ -380,14 +753,20 @@ class PlanValidator:
                 node
             )
 
+
             return False
 
+
+        # =================================================
+        # CHECK EVERY COMPONENT
+        # =================================================
 
         for node in graph:
 
             if visit(
                 node
             ):
+
                 return True
 
 

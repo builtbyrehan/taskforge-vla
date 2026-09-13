@@ -12,6 +12,7 @@ class PlanExecutor:
         arms,
         viewer,
     ):
+
         self.arms = arms
         self.viewer = viewer
 
@@ -25,9 +26,9 @@ class PlanExecutor:
         step,
     ):
 
-        # -------------------------------------------------
+        # =================================================
         # ACTOR CHECK
-        # -------------------------------------------------
+        # =================================================
 
         if step.actor not in self.arms:
 
@@ -85,6 +86,61 @@ class PlanExecutor:
                     "Pick completed"
                     if success
                     else "Pick failed"
+                ),
+            )
+
+
+        # =================================================
+        # PLACE
+        # =================================================
+
+        if step.action == "place":
+
+            if step.target is None:
+
+                return StepResult(
+                    step_id=step.id,
+                    actor=step.actor,
+                    action=step.action,
+                    target=None,
+                    success=False,
+                    message=(
+                        "PLACE requires target"
+                    ),
+                )
+
+
+            if step.position is None:
+
+                return StepResult(
+                    step_id=step.id,
+                    actor=step.actor,
+                    action=step.action,
+                    target=step.target,
+                    success=False,
+                    message=(
+                        "PLACE requires position"
+                    ),
+                )
+
+
+            success = arm.place(
+                object_name=step.target,
+                target_position=step.position,
+                viewer=self.viewer,
+            )
+
+
+            return StepResult(
+                step_id=step.id,
+                actor=step.actor,
+                action=step.action,
+                target=step.target,
+                success=success,
+                message=(
+                    "Place completed"
+                    if success
+                    else "Place failed"
                 ),
             )
 
@@ -157,16 +213,6 @@ class PlanExecutor:
             f"Steps: {len(plan.steps)}"
         )
 
-        print()
-
-
-        # -------------------------------------------------
-        # completed_steps:
-        # preserves actual execution order
-        #
-        # completed_step_ids:
-        # fast dependency lookup
-        # -------------------------------------------------
 
         completed_steps = []
 
@@ -176,7 +222,7 @@ class PlanExecutor:
 
 
         # =================================================
-        # EXECUTE PLAN SEQUENTIALLY
+        # EXECUTE PLAN
         # =================================================
 
         for step in plan.steps:
@@ -200,6 +246,13 @@ class PlanExecutor:
                 f"Target: {step.target}"
             )
 
+            if step.position is not None:
+
+                print(
+                    f"Position: "
+                    f"{step.position}"
+                )
+
             print(
                 f"Depends on: "
                 f"{step.depends_on}"
@@ -207,7 +260,7 @@ class PlanExecutor:
 
 
             # =============================================
-            # DEPENDENCY CHECK
+            # DEPENDENCIES
             # =============================================
 
             missing_dependencies = [
@@ -224,17 +277,6 @@ class PlanExecutor:
 
             if missing_dependencies:
 
-                print()
-                print(
-                    "DEPENDENCY FAILURE"
-                )
-
-                print(
-                    f"Missing: "
-                    f"{missing_dependencies}"
-                )
-
-
                 result = StepResult(
                     step_id=step.id,
                     actor=step.actor,
@@ -242,12 +284,10 @@ class PlanExecutor:
                     target=step.target,
                     success=False,
                     message=(
-                        "Dependencies not "
-                        "completed: "
+                        "Dependencies not completed: "
                         f"{missing_dependencies}"
                     ),
                 )
-
 
                 results.append(
                     result
@@ -266,7 +306,7 @@ class PlanExecutor:
 
 
             # =============================================
-            # VIEWER CHECK
+            # VIEWER
             # =============================================
 
             if (
@@ -286,7 +326,6 @@ class PlanExecutor:
                     ),
                 )
 
-
                 results.append(
                     result
                 )
@@ -304,7 +343,7 @@ class PlanExecutor:
 
 
             # =============================================
-            # EXECUTE ACTION
+            # EXECUTE
             # =============================================
 
             print()
@@ -320,7 +359,6 @@ class PlanExecutor:
                         step
                     )
                 )
-
 
             except Exception as exc:
 
@@ -343,17 +381,15 @@ class PlanExecutor:
 
 
             # =============================================
-            # STEP SUCCESS
+            # SUCCESS
             # =============================================
 
             if result.success:
 
-                # Preserve order
                 completed_steps.append(
                     step.id
                 )
 
-                # Fast membership check
                 completed_step_ids.add(
                     step.id
                 )
@@ -366,7 +402,7 @@ class PlanExecutor:
 
 
             # =============================================
-            # STEP FAILURE
+            # FAILURE
             # =============================================
 
             else:
@@ -393,10 +429,6 @@ class PlanExecutor:
                     results=results,
                 )
 
-
-        # =================================================
-        # PLAN SUCCESS
-        # =================================================
 
         print()
         print("=" * 70)

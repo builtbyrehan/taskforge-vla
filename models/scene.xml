@@ -119,7 +119,7 @@
                         name="left_elbow"
                         type="hinge"
                         axis="0 1 0"
-                        range="-1.5 1.5"
+                        range="-2.9 2.9"
                     />
 
                     <geom
@@ -288,7 +288,7 @@
                         name="right_elbow"
                         type="hinge"
                         axis="0 1 0"
-                        range="-1.5 1.5"
+                        range="-2.9 2.9"
                     />
 
                     <geom
@@ -473,7 +473,7 @@
             joint="left_elbow"
             kp="180"
             kv="20"
-            ctrlrange="-1.5 1.5"
+            ctrlrange="-2.9 2.9"
         />
 
 
@@ -514,7 +514,7 @@
             joint="right_elbow"
             kp="180"
             kv="20"
-            ctrlrange="-1.5 1.5"
+            ctrlrange="-2.9 2.9"
         />
 
 
