@@ -1,18 +1,32 @@
 <div align="center">
 
-# 🤖 TaskForge VLA
+# 🚀🤖 TASKFORGE VLA 🤖🚀
 
-### Adaptive Language-Guided Bimanual Manipulation
+# **Adaptive Language-Guided Bimanual Manipulation**
 
-**Tell two robots what you want done. TaskForge figures out how.**
+## **Tell two robots what you want done. TaskForge figures out how.**
+
+<br>
 
 [![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![MuJoCo](https://img.shields.io/badge/MuJoCo-Simulation-orange?style=for-the-badge)](https://mujoco.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-Frontend-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![Pydantic](https://img.shields.io/badge/Pydantic-Typed%20Schemas-E92063?style=for-the-badge&logo=pydantic&logoColor=white)](https://docs.pydantic.dev/)
+[![OpenRouter](https://img.shields.io/badge/OpenRouter-LLM%20Gateway-6C47FF?style=for-the-badge)](https://openrouter.ai/)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/)
+[![Intel](https://img.shields.io/badge/Intel-Hackathon%20Track-0071C5?style=for-the-badge&logo=intel&logoColor=white)](https://www.intel.com/)
+[![lablab.ai](https://img.shields.io/badge/lablab.ai-AI%20Hackathon-6A5CFF?style=for-the-badge)](https://lablab.ai/)
 
-**Built for the AI Infra Summit Hackathon 2026**  
-**Track: Intel — Bimanual VLA Manipulation with Multi-Modal Reasoning**
+<br>
+
+[![Status](https://img.shields.io/badge/Status-Working%20Prototype-success?style=for-the-badge)](#)
+[![Simulation First](https://img.shields.io/badge/Approach-Simulation%20First-blueviolet?style=for-the-badge)](#)
+[![Dual Arm](https://img.shields.io/badge/Robotics-Dual%20Arm-red?style=for-the-badge)](#)
+[![LLM Powered](https://img.shields.io/badge/AI-LLM%20Powered-brightgreen?style=for-the-badge)](#)
+[![Recovery](https://img.shields.io/badge/Recovery-Replanning%20Enabled-yellow?style=for-the-badge)](#)
+
+### 🏆 **Built for the AI Infra Summit Hackathon 2026**
+### 🎯 **Track: Intel — Bimanual VLA Manipulation with Multi-Modal Reasoning**
 
 </div>
 
@@ -553,26 +567,30 @@ The final simulation state remains visible until the MuJoCo viewer is closed.
 
 ---
 
-# ⚙️ Tech Stack
+# 🏢 TECH STACK + TOOLS + COMPANIES
 
-| Layer | Technology |
-|---|---|
-| Core language | Python |
-| Robotics simulation | MuJoCo |
-| Robot motion | Analytical planar IK + position control |
-| Typed schemas | Pydantic |
-| LLM interpretation | OpenRouter |
-| Current tested model | `inclusionai/ling-3.0-flash-vl:free` |
-| Deterministic fallback | Rule-based instruction parser |
-| Planning | Symbolic planner |
-| Coordination | Reachability/posture-aware bimanual coordinator |
-| Validation | Deterministic plan validator |
-| Execution | Deterministic manipulation primitives |
-| World model | Structured Python/Pydantic state |
-| Verification | Goal predicate verifier |
-| Recovery | Residual-goal replanning |
-| Dashboard | Streamlit |
-| Simulation viewer | Native MuJoCo viewer |
+<div align="center">
+
+## **TECH STACK**
+
+[![Python](https://img.shields.io/badge/Python-Core%20Language-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![MuJoCo](https://img.shields.io/badge/MuJoCo-Robot%20Simulation-orange?style=for-the-badge)](https://mujoco.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-Frontend-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Pydantic](https://img.shields.io/badge/Pydantic-Schema%20Validation-E92063?style=for-the-badge&logo=pydantic&logoColor=white)](https://docs.pydantic.dev/)
+[![NumPy](https://img.shields.io/badge/NumPy-Numerics-013243?style=for-the-badge&logo=numpy&logoColor=white)](https://numpy.org/)
+[![Requests](https://img.shields.io/badge/Requests-HTTP%20Client-2D2D2D?style=for-the-badge)](https://requests.readthedocs.io/)
+[![dotenv](https://img.shields.io/badge/python--dotenv-Environment%20Config-4E9A06?style=for-the-badge)](https://pypi.org/project/python-dotenv/)
+
+<br>
+
+## **PLATFORMS / ORGANIZATIONS**
+
+[![Intel](https://img.shields.io/badge/Intel-Challenge%20Track-0071C5?style=for-the-badge&logo=intel&logoColor=white)](https://www.intel.com/)
+[![lablab.ai](https://img.shields.io/badge/lablab.ai-Hackathon%20Platform-6A5CFF?style=for-the-badge)](https://lablab.ai/)
+[![OpenRouter](https://img.shields.io/badge/OpenRouter-Model%20Gateway-6C47FF?style=for-the-badge)](https://openrouter.ai/)
+[![GitHub](https://img.shields.io/badge/GitHub-Code%20Hosting-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/)
+
+</div>
 
 ---
 
@@ -920,14 +938,20 @@ TaskForge is built on technologies and ideas from robotics, embodied AI and open
 
 ---
 
+
 <div align="center">
 
-## 🤖 TaskForge VLA
+# ⭐ TASKFORGE VLA ⭐
 
-### From human intent to validated robot action.
+## **From human intent to validated robot action**
 
-**Goal → Interpret → Observe → Plan → Coordinate → Validate → Act → Recover → Verify**
+### **Interpret → Plan → Coordinate → Validate → Execute → Recover → Verify**
 
-**Built for the AI Infra Summit Hackathon 2026**
+<br>
+
+[![Built for Intel](https://img.shields.io/badge/Built%20for-Intel-0071C5?style=for-the-badge&logo=intel&logoColor=white)](https://www.intel.com/)
+[![Built on MuJoCo](https://img.shields.io/badge/Built%20on-MuJoCo-orange?style=for-the-badge)](https://mujoco.org/)
+[![Powered by OpenRouter](https://img.shields.io/badge/Powered%20by-OpenRouter-6C47FF?style=for-the-badge)](https://openrouter.ai/)
+[![Frontend in Streamlit](https://img.shields.io/badge/Frontend-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
 
 </div>
