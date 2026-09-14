@@ -903,19 +903,7 @@ Potential extensions include:
 
 ---
 
-# 📄 License
 
-A final open-source license has not yet been selected.
-
-Before public distribution, add a `LICENSE` file and update this section.
-
-Common choices include:
-
-- MIT
-- Apache-2.0
-- BSD-3-Clause
-
----
 
 # 🙌 Acknowledgements
 
