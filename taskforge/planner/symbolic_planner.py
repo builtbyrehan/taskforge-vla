@@ -1,3 +1,7 @@
+from taskforge.coordination.bimanual_coordinator import (
+    BimanualCoordinator,
+)
+
 from taskforge.schemas.goal import (
     ParsedGoal,
 )
@@ -14,32 +18,32 @@ class SymbolicPlanner:
         self,
         relation_offset=0.10,
         near_offset=0.14,
+        arms=None,
     ):
 
-        # Temporary assignment based on our
-        # current placeholder robot geometry.
+        self.relation_offset = relation_offset
+        self.near_offset = near_offset
 
+        self.arms = arms
+
+        self.coordinator = None
+
+        if arms is not None:
+            self.coordinator = (
+                BimanualCoordinator(
+                    arms=arms
+                )
+            )
+
+        # Legacy fallback only
         self.default_actor_assignment = {
-
-            "red_block":
-                "left_arm",
-
-            "blue_block":
-                "right_arm",
+            "red_block": "left_arm",
+            "blue_block": "right_arm",
         }
 
 
-        self.relation_offset = (
-            relation_offset
-        )
-
-        self.near_offset = (
-            near_offset
-        )
-
-
     # =====================================================
-    # ARM RESOLUTION
+    # LEGACY ARM RESOLUTION
     # =====================================================
 
     def resolve_actor(
@@ -49,26 +53,18 @@ class SymbolicPlanner:
     ):
 
         if requested_actor != "auto":
-
             return requested_actor
 
-
-        if (
-            target
-            in self.default_actor_assignment
-        ):
-
+        if target in self.default_actor_assignment:
             return (
                 self.default_actor_assignment[
                     target
                 ]
             )
 
-
         raise ValueError(
-            f"No automatic arm "
-            f"assignment available "
-            f"for '{target}'."
+            f"No automatic arm assignment "
+            f"available for '{target}'."
         )
 
 
@@ -83,31 +79,19 @@ class SymbolicPlanner:
     ):
 
         subject = predicate.subject
-
         reference = predicate.reference
 
-
-        if (
-            subject
-            not in world.objects
-        ):
-
+        if subject not in world.objects:
             raise ValueError(
                 f"Unknown subject object: "
                 f"{subject}"
             )
 
-
-        if (
-            reference
-            not in world.objects
-        ):
-
+        if reference not in world.objects:
             raise ValueError(
                 f"Unknown reference object: "
                 f"{reference}"
             )
-
 
         subject_position = list(
             world.objects[
@@ -121,16 +105,9 @@ class SymbolicPlanner:
             ].position
         )
 
-
-        # Keep our current table/object Z.
         target_z = (
             subject_position[2]
         )
-
-
-        # =================================================
-        # RIGHT OF
-        # =================================================
 
         if (
             predicate.predicate
@@ -140,16 +117,9 @@ class SymbolicPlanner:
             return (
                 reference_position[0]
                 + self.relation_offset,
-
                 reference_position[1],
-
                 target_z,
             )
-
-
-        # =================================================
-        # LEFT OF
-        # =================================================
 
         if (
             predicate.predicate
@@ -159,16 +129,9 @@ class SymbolicPlanner:
             return (
                 reference_position[0]
                 - self.relation_offset,
-
                 reference_position[1],
-
                 target_z,
             )
-
-
-        # =================================================
-        # NEAR
-        # =================================================
 
         if (
             predicate.predicate
@@ -178,12 +141,9 @@ class SymbolicPlanner:
             return (
                 reference_position[0]
                 + self.near_offset,
-
                 reference_position[1],
-
                 target_z,
             )
-
 
         raise ValueError(
             f"Unsupported predicate: "
@@ -202,33 +162,20 @@ class SymbolicPlanner:
     ):
 
         if world is None:
-
             raise ValueError(
                 "Relational planning "
                 "requires WorldState."
             )
 
-
-        if (
-            not goal.desired_predicates
-        ):
-
+        if not goal.desired_predicates:
             raise ValueError(
                 "Relational goal contains "
                 "no desired predicate."
             )
 
-
         predicate = (
             goal.desired_predicates[0]
         )
-
-
-        actor = self.resolve_actor(
-            "auto",
-            predicate.subject,
-        )
-
 
         target_position = (
             self.calculate_relation_position(
@@ -237,6 +184,29 @@ class SymbolicPlanner:
             )
         )
 
+        # Phase 12 arm selection
+        if self.coordinator is not None:
+
+            actor = (
+                self.coordinator
+                .select_actor_for_pick_and_place(
+                    requested_actor="auto",
+                    target=predicate.subject,
+                    target_position=(
+                        target_position
+                    ),
+                    world=world,
+                )
+            )
+
+        else:
+
+            actor = (
+                self.resolve_actor(
+                    "auto",
+                    predicate.subject,
+                )
+            )
 
         return TaskPlan(
 
@@ -293,6 +263,7 @@ class SymbolicPlanner:
     def _create_pick_plan(
         self,
         goal,
+        world,
     ):
 
         steps = []
@@ -301,29 +272,52 @@ class SymbolicPlanner:
 
         step_number = 1
 
+        # Phase 12 bimanual assignment
+        if self.coordinator is not None:
 
-        for command in goal.commands:
+            if world is None:
+                raise ValueError(
+                    "Automatic bimanual "
+                    "assignment requires "
+                    "WorldState."
+                )
 
-            actor = self.resolve_actor(
-                command.actor,
-                command.target,
+            actors = (
+                self.coordinator
+                .assign_pick_commands(
+                    goal.commands,
+                    world,
+                )
             )
 
+        else:
+
+            actors = [
+
+                self.resolve_actor(
+                    command.actor,
+                    command.target,
+                )
+
+                for command
+                in goal.commands
+            ]
+
+        for command, actor in zip(
+            goal.commands,
+            actors,
+        ):
 
             pick_id = (
                 f"a{step_number}"
             )
 
-
             dependencies = []
 
-
             if previous_step_id is not None:
-
                 dependencies.append(
                     previous_step_id
                 )
-
 
             steps.append(
 
@@ -340,14 +334,11 @@ class SymbolicPlanner:
                 )
             )
 
-
             step_number += 1
-
 
             home_id = (
                 f"a{step_number}"
             )
-
 
             steps.append(
 
@@ -361,13 +352,11 @@ class SymbolicPlanner:
                 )
             )
 
-
             previous_step_id = (
                 home_id
             )
 
             step_number += 1
-
 
         return TaskPlan(
 
@@ -405,9 +394,9 @@ class SymbolicPlanner:
                 )
             )
 
-
         return (
             self._create_pick_plan(
-                goal
+                goal,
+                world,
             )
         )

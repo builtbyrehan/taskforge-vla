@@ -25,8 +25,8 @@ def main():
     print("=" * 70)
     print("TASKFORGE VLA")
     print(
-        "Phase 11B - LLM-Powered "
-        "Goal-Aware Task Orchestration"
+        "Phase 12 - Reachability-Aware "
+        "Bimanual Task Orchestration"
     )
     print("=" * 70)
 
@@ -245,13 +245,13 @@ def main():
         if result.success:
 
             print(
-                "PHASE_11B_SUCCESS"
+                "PHASE_12B_SUCCESS"
             )
 
         else:
 
             print(
-                "PHASE_11B_FAILED"
+                "PHASE_12B_FAILED"
             )
 
 

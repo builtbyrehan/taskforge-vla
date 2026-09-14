@@ -121,7 +121,9 @@ class TaskRunner:
         # =================================================
 
         self.planner = (
-            SymbolicPlanner()
+            SymbolicPlanner(
+                arms=self.arms,
+            )
         )
 
         self.validator = (
