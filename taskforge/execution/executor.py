@@ -11,10 +11,18 @@ class PlanExecutor:
         self,
         arms,
         viewer,
+        failure_injector=None,
     ):
 
         self.arms = arms
         self.viewer = viewer
+
+        # Optional controlled failure system.
+        # Normal TaskForge execution works exactly
+        # as before when this is None.
+        self.failure_injector = (
+            failure_injector
+        )
 
 
     # =====================================================
@@ -171,7 +179,7 @@ class PlanExecutor:
 
 
         # =================================================
-        # UNSUPPORTED ACTION
+        # UNSUPPORTED
         # =================================================
 
         return StepResult(
@@ -184,6 +192,64 @@ class PlanExecutor:
                 f"Unsupported action: "
                 f"{step.action}"
             ),
+        )
+
+
+    # =====================================================
+    # INJECT FAILURE
+    # =====================================================
+
+    def _inject_failure_if_requested(
+        self,
+        step,
+    ):
+
+        if (
+            self.failure_injector
+            is None
+        ):
+
+            return None
+
+
+        if not (
+            self.failure_injector
+            .should_fail(step)
+        ):
+
+            return None
+
+
+        message = (
+            self.failure_injector
+            .failure_message(step)
+        )
+
+
+        print()
+        print("!" * 70)
+        print("TASKFORGE FAILURE INJECTION")
+        print("!" * 70)
+
+        print(
+            message
+        )
+
+        print(
+            "Physical action was NOT "
+            "executed for this step."
+        )
+
+        print("!" * 70)
+
+
+        return StepResult(
+            step_id=step.id,
+            actor=step.actor,
+            action=step.action,
+            target=step.target,
+            success=False,
+            message=message,
         )
 
 
@@ -246,12 +312,14 @@ class PlanExecutor:
                 f"Target: {step.target}"
             )
 
+
             if step.position is not None:
 
                 print(
                     f"Position: "
                     f"{step.position}"
                 )
+
 
             print(
                 f"Depends on: "
@@ -284,10 +352,12 @@ class PlanExecutor:
                     target=step.target,
                     success=False,
                     message=(
-                        "Dependencies not completed: "
+                        "Dependencies not "
+                        "completed: "
                         f"{missing_dependencies}"
                     ),
                 )
+
 
                 results.append(
                     result
@@ -326,6 +396,7 @@ class PlanExecutor:
                     ),
                 )
 
+
                 results.append(
                     result
                 )
@@ -352,27 +423,45 @@ class PlanExecutor:
             )
 
 
-            try:
+            # =============================================
+            # CONTROLLED FAILURE INJECTION
+            # =============================================
 
-                result = (
-                    self.execute_step(
-                        step
+            result = (
+                self._inject_failure_if_requested(
+                    step
+                )
+            )
+
+
+            # =============================================
+            # REAL ACTION
+            # =============================================
+
+            if result is None:
+
+                try:
+
+                    result = (
+                        self.execute_step(
+                            step
+                        )
                     )
-                )
 
-            except Exception as exc:
 
-                result = StepResult(
-                    step_id=step.id,
-                    actor=step.actor,
-                    action=step.action,
-                    target=step.target,
-                    success=False,
-                    message=(
-                        f"Execution exception: "
-                        f"{exc}"
-                    ),
-                )
+                except Exception as exc:
+
+                    result = StepResult(
+                        step_id=step.id,
+                        actor=step.actor,
+                        action=step.action,
+                        target=step.target,
+                        success=False,
+                        message=(
+                            "Execution exception: "
+                            f"{exc}"
+                        ),
+                    )
 
 
             results.append(
@@ -393,6 +482,7 @@ class PlanExecutor:
                 completed_step_ids.add(
                     step.id
                 )
+
 
                 print()
                 print(
@@ -432,7 +522,9 @@ class PlanExecutor:
 
         print()
         print("=" * 70)
-        print("ALL PLAN STEPS COMPLETED")
+        print(
+            "ALL PLAN STEPS COMPLETED"
+        )
         print("=" * 70)
 
 

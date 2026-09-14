@@ -720,6 +720,20 @@ class BimanualCoordinator:
             or []
         )
 
+                # =================================================
+        # EXCLUDE ARMS ALREADY HOLDING OBJECTS
+        # =================================================
+
+        occupied_actors = {
+            obj.grasped_by
+            for obj in world.objects.values()
+            if obj.grasped_by is not None
+        }
+
+        reserved_actors.update(
+            occupied_actors
+        )
+
 
         # =================================================
         # EXPLICIT USER REQUEST
