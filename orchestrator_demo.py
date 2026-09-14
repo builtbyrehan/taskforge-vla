@@ -25,8 +25,8 @@ def main():
     print("=" * 70)
     print("TASKFORGE VLA")
     print(
-        "Phase 10 - Goal-Aware "
-        "Task Orchestration"
+        "Phase 11B - LLM-Powered "
+        "Goal-Aware Task Orchestration"
     )
     print("=" * 70)
 
@@ -81,20 +81,55 @@ def main():
     observer = WorldObserver(
         backend=backend,
         scenario_id=(
-            "orchestrator_demo_v1"
+            "llm_orchestrator_demo_v1"
         ),
     )
 
 
     # =====================================================
-    # USER GOAL
+    # USER INSTRUCTION
     # =====================================================
 
-    instruction = (
-        "Put the red block to the "
-        "left of the blue block."
+    print()
+    print("Example instructions:")
+    print(
+        '- "Move the red block to the '
+        'left side of the blue one"'
+    )
+    print(
+        '- "Put the red block to the '
+        'right of the blue block"'
+    )
+    print(
+        '- "Put the red block near '
+        'the blue one"'
+    )
+    print()
+
+    instruction = input(
+        "TaskForge > "
+    ).strip()
+
+
+    # Default instruction if user presses Enter.
+    if not instruction:
+
+        instruction = (
+            "Move the red block to the "
+            "left side of the blue one"
+        )
+
+
+    print()
+    print(
+        f"Selected instruction: "
+        f"{instruction}"
     )
 
+
+    # =====================================================
+    # VIEWER
+    # =====================================================
 
     with mujoco.viewer.launch_passive(
         backend.model,
@@ -104,11 +139,16 @@ def main():
     ) as viewer:
 
 
+        # Let MuJoCo settle before observing.
         backend.run_for(
             1.0,
             viewer,
         )
 
+
+        # =================================================
+        # TASK RUNNER
+        # =================================================
 
         runner = TaskRunner(
             observer=observer,
@@ -117,25 +157,36 @@ def main():
         )
 
 
+        # =================================================
+        # END-TO-END TASK
+        # =================================================
+
         result = runner.run(
             instruction
         )
 
+
+        # =================================================
+        # RESULT
+        # =================================================
 
         print()
         print("=" * 70)
         print("TASK RUN RESULT")
         print("=" * 70)
 
+
         print(
             f"Success: "
             f"{result.success}"
         )
 
+
         print(
             f"Status: "
             f"{result.status}"
         )
+
 
         print(
             f"Message: "
@@ -143,25 +194,78 @@ def main():
         )
 
 
+        print(
+            f"Interpretation source: "
+            f"{result.interpretation_source}"
+        )
+
+
+        # =================================================
+        # GOAL
+        # =================================================
+
+        if result.goal is not None:
+
+            print()
+            print("FINAL PARSED GOAL")
+            print("-" * 70)
+
+            print(
+                result.goal.model_dump_json(
+                    indent=2
+                )
+            )
+
+
+        # =================================================
+        # PLAN
+        # =================================================
+
+        if result.plan is not None:
+
+            print()
+            print("EXECUTED PLAN")
+            print("-" * 70)
+
+            print(
+                result.plan.model_dump_json(
+                    indent=2
+                )
+            )
+
+
+        # =================================================
+        # FINAL STATUS
+        # =================================================
+
         print()
+        print("=" * 70)
 
 
         if result.success:
 
             print(
-                "PHASE_10_SUCCESS"
+                "PHASE_11B_SUCCESS"
             )
 
         else:
 
             print(
-                "PHASE_10_FAILED"
+                "PHASE_11B_FAILED"
             )
 
 
+        print("=" * 70)
+
+
+        # =================================================
+        # KEEP VIEWER OPEN
+        # =================================================
+
         print()
         print(
-            "Close viewer to exit."
+            "Close the MuJoCo viewer "
+            "to exit."
         )
 
 
